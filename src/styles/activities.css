@@ -1,0 +1,550 @@
+/* =========================================================
+   Activity stages. Each activity has its own character:
+   QUICK THINK  = a calculator tape (speed, one huge expression)
+   PATTERN FIND = a specimen board (tiles, lettered options)
+   Both use the shared tokens; the shell sets --accent / --on-accent.
+   ========================================================= */
+
+.play-stage > .qt,
+.play-stage > .pf {
+  width: 100%;
+  align-self: stretch;
+}
+
+/* ---------- QUICK THINK ---------- */
+.qt {
+  display: grid;
+  gap: var(--s-5);
+  align-content: center;
+}
+
+.qt__main {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.qt__tape {
+  display: grid;
+  align-content: end;
+  gap: 2px;
+  min-height: 4.6em;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--muted);
+}
+.qt__line {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+/* A miss is the only line that reads at full ink: the correction is the useful part */
+.qt__line--miss {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.qt__expr {
+  font-family: var(--font-display);
+  font-stretch: 70%;
+  font-weight: 850;
+  font-size: clamp(56px, 11vw, 168px);
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.qt__answer {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 1.5em;
+  padding: var(--s-2) var(--s-4);
+  background: var(--paper);
+  border: var(--border);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: clamp(32px, 6vw, 60px);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.qt__eq {
+  padding: 0 0.3em;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.qt__digits {
+  flex: 1;
+  text-align: right;
+}
+.qt__cursor {
+  width: 0.12em;
+  height: 1em;
+  background: var(--ink);
+}
+
+.qt__keys {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-2);
+  max-width: 420px;
+  width: 100%;
+  justify-self: center;
+}
+.qt__key {
+  display: grid;
+  place-items: center;
+  min-height: 56px;
+  background: var(--paper);
+  color: var(--ink);
+  border: var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 26px;
+  cursor: pointer;
+  transition:
+    background-color 0.12s var(--ease-out),
+    color 0.12s var(--ease-out);
+}
+.qt__key:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--paper);
+}
+.qt__key:active:not(:disabled) {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.qt__key--enter {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.qt__key:disabled {
+  border-style: dashed;
+  background: transparent;
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+@media (min-width: 900px) {
+  .qt {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: center;
+    gap: var(--s-7);
+  }
+  .qt__keys {
+    justify-self: stretch;
+    max-width: none;
+  }
+  .qt__key {
+    min-height: 72px;
+  }
+}
+
+@media (max-width: 600px) {
+  .qt {
+    gap: var(--s-4);
+  }
+  .qt__line:nth-last-child(n + 3) {
+    display: none;
+  }
+  .qt__tape {
+    min-height: 3.2em;
+  }
+}
+
+/* ---------- PATTERN FIND ---------- */
+.pf {
+  --tile: clamp(52px, 11vw, 96px);
+  display: grid;
+  gap: var(--s-5);
+  align-content: start;
+}
+
+.pf__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+.pf__count {
+  white-space: nowrap;
+}
+.pf__steps {
+  display: flex;
+  gap: var(--s-2);
+}
+@media (max-width: 480px) {
+  /* the highlighted step already shows where you are */
+  .pf__count {
+    display: none;
+  }
+  .pf__top {
+    justify-content: flex-end;
+  }
+}
+.pf__step {
+  display: grid;
+  place-items: center;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  background: var(--paper);
+  border: var(--border);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  cursor: pointer;
+}
+.pf__step--done {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.pf__step[aria-current='step'] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.pf__prompt {
+  font-weight: 500;
+}
+
+.pf__board {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.pf__board--table {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 3), var(--tile));
+  width: fit-content;
+}
+
+.pf__tile {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--tile);
+  height: var(--tile);
+  border: var(--border);
+  background: var(--paper);
+  font-family: var(--font-display);
+  font-stretch: 75%;
+  font-weight: 850;
+  font-size: calc(var(--tile) * 0.46);
+  font-variant-numeric: tabular-nums;
+}
+.pf__tile--blank {
+  border-style: dashed;
+  background: var(--accent);
+}
+
+.pf__choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+.pf__choice {
+  display: block;
+  cursor: pointer;
+}
+.pf__tile--choice {
+  width: 100%;
+  height: calc(var(--tile) * 1.15);
+  transition:
+    background-color 0.12s var(--ease-out),
+    color 0.12s var(--ease-out);
+}
+.pf__choice:hover .pf__tile--choice {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.pf__choice input:checked + .pf__tile--choice {
+  background: var(--ink);
+  color: var(--paper);
+}
+.pf__choice input:focus-visible + .pf__tile--choice {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
+.pf__letter {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: var(--ls-label);
+}
+
+.pf__rule {
+  display: grid;
+  gap: var(--s-2);
+}
+.pf__input {
+  min-height: var(--touch);
+  padding: 0 var(--s-4);
+  background: var(--paper);
+  color: var(--ink);
+  border: var(--border);
+  border-radius: var(--radius);
+  font: inherit;
+}
+.pf__input::placeholder {
+  color: var(--muted);
+}
+.pf__hint {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+  color: var(--muted);
+  font-size: 14px;
+}
+.pf__counter {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.pf__nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+.pf__skip {
+  color: var(--muted);
+  font-size: 14px;
+}
+/* In-stage controls follow the activity colour; the shell's submit stays the acid CTA */
+.pf__nav .btn--primary {
+  --btn-bg: var(--accent);
+  --btn-fg: var(--on-accent);
+}
+.pf__nav .btn--primary:hover:not(:disabled) {
+  --btn-bg: var(--ink);
+  --btn-fg: var(--accent);
+}
+
+/* Shape and text tokens inside tiles */
+.tok {
+  display: grid;
+  place-items: center;
+}
+.tok--shape {
+  width: 72%;
+  height: 72%;
+  transform-origin: center;
+}
+.tok--blank {
+  font-family: var(--font-display);
+  font-weight: 850;
+}
+
+@media (min-width: 760px) {
+  .pf {
+    --tile: clamp(72px, 7vw, 104px);
+  }
+  .pf__choices {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ---------- WORD WEAVE ---------- */
+.ww {
+  display: grid;
+  gap: var(--s-5);
+  align-content: start;
+}
+.ww__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+.ww__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--touch);
+  padding: 0 var(--s-4);
+  background: var(--paper);
+  border: var(--border);
+  font-weight: 700;
+  transition:
+    background-color 0.15s var(--ease-out),
+    color 0.15s var(--ease-out);
+}
+/* A used word fills in with the activity colour */
+.ww__chip--used {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.ww__extra {
+  display: grid;
+  gap: var(--s-2);
+}
+.ww__extra-item {
+  padding: var(--s-3) var(--s-4);
+  border: var(--border);
+  border-style: dashed;
+}
+.ww__extra-item--met {
+  border-style: solid;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.ww__sheet {
+  display: grid;
+  gap: var(--s-2);
+}
+.ww__text {
+  min-height: 9em;
+  padding: var(--s-4);
+  background: var(--paper);
+  color: var(--ink);
+  border: var(--border);
+  border-radius: var(--radius);
+  font: inherit;
+  line-height: 1.6;
+  resize: vertical;
+}
+.ww__text::placeholder {
+  color: var(--muted);
+}
+.ww__hint {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+  color: var(--muted);
+  font-size: 14px;
+}
+.ww__counter {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- SHAPE MIX ---------- */
+.sm {
+  --cell: clamp(56px, 18vw, 96px);
+  --color-a: var(--cobalt);
+  --color-b: var(--flare);
+  display: grid;
+  gap: var(--s-5);
+  align-content: start;
+}
+.sm__conditions {
+  display: grid;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+.sm__cond {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-4);
+  border: var(--border);
+  border-style: dashed;
+  background: var(--paper);
+}
+.sm__cond--met {
+  border-style: solid;
+  background: var(--ink);
+  color: var(--paper);
+}
+.sm__cond-mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+}
+.sm__board {
+  display: grid;
+  grid-template-columns: repeat(4, var(--cell));
+  gap: var(--s-2);
+  width: fit-content;
+}
+.sm__cell {
+  display: grid;
+  place-items: center;
+  width: var(--cell);
+  height: var(--cell);
+  min-width: 56px;
+  min-height: 56px;
+  padding: 0;
+  background: var(--paper);
+  border: var(--border);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.sm__cell:hover {
+  background: color-mix(in srgb, var(--paper) 85%, var(--ink));
+}
+.sm__cell:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
+.sm__cell--A {
+  color: var(--color-a);
+}
+.sm__cell--B {
+  color: var(--color-b);
+}
+.sm__mark {
+  width: 62%;
+  height: 62%;
+  fill: currentColor;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.sm__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-4);
+}
+.sm__palette {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 0;
+  border: 0;
+}
+.sm__swatch-label {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+.sm__swatch {
+  display: block;
+  width: var(--touch);
+  height: var(--touch);
+  border: var(--border);
+}
+.sm__swatch--A {
+  background: var(--color-a);
+}
+.sm__swatch--B {
+  background: var(--color-b);
+}
+.sm__swatch-label input:checked + .sm__swatch {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+.sm__swatch-label input:focus-visible + .sm__swatch {
+  outline: 3px dashed var(--ink);
+  outline-offset: 3px;
+}
+.sm__hint {
+  color: var(--muted);
+  font-size: 14px;
+}
+@media (min-width: 760px) {
+  .sm {
+    --cell: clamp(72px, 7vw, 96px);
+  }
+}
