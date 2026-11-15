@@ -1,0 +1,68 @@
+:root {
+  /* Colour (PRD 10.1) */
+  --paper: #f1eee6;
+  --ink: #0d0d0d;
+  --acid: #c8ff2e;
+  --flare: #ff5a1f;
+  --cobalt: #2f3bff;
+  --bubble: #ff8fd0;
+  --muted: #6b6a66;
+
+  /* Semantic */
+  --bg: var(--paper);
+  --fg: var(--ink);
+  --ring: var(--ink);
+  --border: 2px solid var(--ink);
+  --radius: 2px;
+
+  /* Type families (PRD 10.2) */
+  --font-display: 'Archivo Variable', 'Pretendard Variable', system-ui, sans-serif;
+  --font-body: 'Pretendard Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+
+  /* Type scale. Hero follows PRD (clamp 72px..280px, 16vw) with a height cap so the
+     stacked three-line hero always fits the first viewport. */
+  --fs-hero: clamp(72px, min(16vw, 21dvh), 280px);
+  --fs-h1: clamp(40px, 7vw, 96px);
+  --fs-h2: 40px;
+  --fs-body: clamp(16px, 0.9vw + 10px, 18px);
+  --fs-label: 12px;
+  --ls-label: 0.08em;
+
+  /* Spacing */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --s-9: 96px;
+  --s-10: 120px;
+  --gutter: clamp(16px, 4vw, 48px);
+  --touch: 44px;
+
+  /* Motion (kept minimal until the dedicated motion step) */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-quick: 0.25s;
+}
+
+/* Per-activity accent. Registry stores the variable name in `activity.accent`;
+   components put it in data-accent. Cobalt cannot carry ink text (3:1), so it takes paper. */
+[data-accent='--acid'] {
+  --accent: var(--acid);
+  --on-accent: var(--ink);
+}
+[data-accent='--bubble'] {
+  --accent: var(--bubble);
+  --on-accent: var(--ink);
+}
+[data-accent='--flare'] {
+  --accent: var(--flare);
+  --on-accent: var(--ink);
+}
+[data-accent='--cobalt'] {
+  --accent: var(--cobalt);
+  --on-accent: var(--paper);
+}

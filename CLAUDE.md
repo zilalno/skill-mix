@@ -4,15 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-`skill-mix` (SKILL//MIX) is a Vite + React 19 + TypeScript app; the product spec is `PRD.md`. Only the shared contracts are in place so far — screens are title-only placeholders and activities are empty shells.
+`skill-mix` (SKILL//MIX) is a Vite + React 19 + TypeScript app; the product spec is `PRD.md`. All five screens, the four activities (each with `Stage`, `evaluate`, `buildAiPayload` and tests), storage, the AI pipeline and the motion layer exist. See `README.md` for run/deploy steps and the AI operating notes.
 
 ## Architecture (shared contracts)
 
 - `src/types.ts` — shared types from PRD 8.2–9 (`ActivityDefinition`, `StageProps`, `SessionRecord`, `AiFeedback`, …). `EvalContext` and `SessionCore` are not defined in the PRD; their minimal shapes live here.
 - `src/activities/registry.ts` — `ACTIVITIES` array and `getActivity(id: string)` (returns `undefined` for unknown ids). Each activity is registered as an `ActivityDefinition`; `Stage`/`evaluate`/`buildAiPayload` are placeholders to be filled per activity.
 - `src/router.ts` — hand-written hash router: pure `parseRoute(hash)`, `useRoute()`, `navigate()`, and `paths` builders. Routes: `#/`, `#/discover`, `#/activity/:id`, `#/result/:sessionId`, `#/archive`. `App.tsx` switches on the parsed route; the `<nav>` in it is temporary scaffolding.
-- `src/lib/storage.ts`, `src/lib/ai.ts` — signature-only stubs (bodies throw `TODO`) so both developers can import them now.
-- AI calls are meant to go through a server function `api/analyze.ts` (PRD 11) so the OpenRouter key stays server-side; that function does not exist yet. Separately, `vite.config.ts` proxies `/api/openrouter/*` to OpenRouter in dev/preview and injects `OPENROUTER_API_KEY`.
+- `src/lib/storage.ts` — LocalStorage layer (`skillmix:v1:sessions`/`settings`): `saveSession`/`saveSessionDetailed`, `getSessions`, `getSession`, `updateSessionAi(id, patch)` (merges into `ai` only), `deleteSession`, `clearAll`, `loadSettings`/`saveSettings`. Never throws; invalid entries are skipped but not deleted, an unreadable blob is backed up before being replaced, and a session that cannot be written (quota) is kept in memory for the visit. Tests use `src/lib/testing/fakeStorage.ts` (no DOM env).
+- `src/lib/ai.ts` — `requestAnalysis(sessionId)` (call on RESULT entry; consent check, in-flight set, 30s pending rule, 28s timeout, result merged via `updateSessionAi`), `retryAnalysis`, `fetchAnalysis`. `VITE_AI_MOCK=1` returns a fixed response in dev builds only.
+- `src/activities/finishRun.ts` + `useActivityRun.ts` — submit pipeline: evaluate → `SessionRecord` (`ai.status` pending/skipped by consent) → save first → navigate to `#/result/:id`. Storage failures fire a window event shown by `StorageNotice`.
+- `src/lib/motion.ts` — the only place that registers GSAP plugins; exports `gsap`, `useGSAP`, `ScrollTrigger`, `MQ` (matchMedia conditions: `full`, `reduced`, `mouse`) and `countUp`. All motion is `useGSAP` + `gsap.matchMedia` (reduced motion = fade/instant, mouse effects = desktop pointer only). Use `gsap.fromTo` with `clearProps`, not `gsap.from`: `from` reads its end state from the DOM and ends up invisible after StrictMode's double effect run. Route wipe lives in `App.tsx`, 3-2-1 and the closing frame in `ActivityShell.tsx`.
+- `api/analyze.ts` — Vercel function (Web handler, `maxDuration` 30 in `vercel.json`); all logic is in `api/_lib/` as testable pure modules: `validate.ts` (request whitelist), `prompt.ts`, `feedback.ts` (response validator), `openrouter.ts`, `handler.ts`. The only place that reads `OPENROUTER_API_KEY`/`OPENROUTER_MODEL`. The default model is a reasoning model, so requests send `reasoning: {enabled:false}`; answers containing Han/kana characters or failing validation are retried (max 3 calls inside the 25s budget); the free tier allows 50 requests/day per account. There is no dev server for `/api/*` under plain `vite`; use `vercel dev` for live calls or `VITE_AI_MOCK=1`. `src/` imports the pure `api/_lib/constants.ts` and `feedback.ts` (no secrets in them).
 
 ## Commands
 
@@ -28,7 +31,7 @@ There is no lint script or ESLint/Prettier config.
 
 - Animation: `gsap` with `@gsap/react` (use its `useGSAP` hook rather than raw `useEffect` for GSAP setup/cleanup).
 - Icons: `lucide-react`.
-- Vitest runs in the default Node environment: the only test is `src/router.test.ts` (pure `parseRoute`). There is no `test` block in `vite.config.ts` and no DOM environment (jsdom/happy-dom) or Testing Library, so component/hook tests will need that added first.
+- Vitest runs in the default Node environment (tests: router, storage, ai, finishRun, and `api/_lib/*`). There is no `test` block in `vite.config.ts` and no DOM environment (jsdom/happy-dom) or Testing Library, so component/hook tests will need that added first. Tests must never call OpenRouter: mock `fetch`.
 
 ## 공통 규칙
 
